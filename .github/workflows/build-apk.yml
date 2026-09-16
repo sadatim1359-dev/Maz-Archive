@@ -37,29 +37,23 @@ jobs:
           echo "Extracted files:"
           find extracted -maxdepth 3 -type f | head -100
 
-      - name: Find Android project
+      - 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+         - name: Find Android project
         run: |
-          PROJECT_DIR=$(find "$GITHUB_WORKSPACE/extracted" \
-            -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) \
-            -print -quit | xargs -r dirname)
+          PROJECT_DIR="$GITHUB_WORKSPACE/extracted/android"
 
-          if [ -z "$PROJECT_DIR" ]; then
+          if [ ! -f "$PROJECT_DIR/settings.gradle.kts" ]; then
             echo "ERROR: Android project not found"
-            echo "Searching for Gradle files..."
-            find "$GITHUB_WORKSPACE/extracted" -type f \
-              \( -name "build.gradle" -o -name "build.gradle.kts" \)
             exit 1
           fi
 
           echo "Android project found at:"
           echo "$PROJECT_DIR"
 
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
-        with:
-          packages: ''
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV" packages: ''
 
       - name: Install Android SDK 35
         run: |
