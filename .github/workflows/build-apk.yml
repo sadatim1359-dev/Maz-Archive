@@ -23,7 +23,6 @@ jobs:
       - name: Extract project ZIP
         run: |
           mkdir -p extracted
-
           ZIP_FILE=$(find . -maxdepth 1 -type f -iname "*.zip" | head -n 1)
 
           if [ -z "$ZIP_FILE" ]; then
@@ -34,26 +33,10 @@ jobs:
           echo "Found ZIP: $ZIP_FILE"
           unzip -q "$ZIP_FILE" -d extracted
 
-          echo "Extracted files:"
-          find extracted -maxdepth 3 -type f | head -100
-
-      - 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
         with:
-         - name: Find Android project
-        run: |
-          PROJECT_DIR="$GITHUB_WORKSPACE/extracted/android"
-
-          if [ ! -f "$PROJECT_DIR/settings.gradle.kts" ]; then
-            echo "ERROR: Android project not found"
-            exit 1
-          fi
-
-          echo "Android project found at:"
-          echo "$PROJECT_DIR"
-
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV" packages: ''
+          packages: ''
 
       - name: Install Android SDK 35
         run: |
@@ -64,32 +47,29 @@ jobs:
 
       - name: Install Gradle 8.9
         run: |
-          curl -L \
-            https://services.gradle.org/distributions/gradle-8.9-bin.zip \
+          curl -L https://services.gradle.org/distributions/gradle-8.9-bin.zip \
             -o /tmp/gradle.zip
-
           unzip -q /tmp/gradle.zip -d /tmp
-
           echo "/tmp/gradle-8.9/bin" >> "$GITHUB_PATH"
 
       - name: Generate Gradle Wrapper
+        working-directory: extracted/android
         run: |
-          cd "$PROJECT_DIR"
           gradle wrapper --gradle-version 8.9
 
       - name: Make Gradle executable
+        working-directory: extracted/android
         run: |
-          cd "$PROJECT_DIR"
           chmod +x gradlew
 
       - name: Build APK
+        working-directory: extracted/android
         run: |
-          cd "$PROJECT_DIR"
           ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: MazArchive-debug-apk
-          path: '/build/outputs/apk//*.apk'
+          path: extracted/android/app/build/outputs/apk/**/*.apk
           if-no-files-found: error
