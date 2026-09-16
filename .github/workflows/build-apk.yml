@@ -10,10 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: android
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,6 +19,42 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+
+      - name: Extract project ZIP
+        run: |
+          mkdir -p extracted
+
+          ZIP_FILE=$(find . -maxdepth 1 -type f -iname "*.zip" | head -n 1)
+
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ERROR: ZIP file not found"
+            exit 1
+          fi
+
+          echo "Found ZIP: $ZIP_FILE"
+          unzip -q "$ZIP_FILE" -d extracted
+
+          echo "Extracted files:"
+          find extracted -maxdepth 3 -type f | head -100
+
+      - name: Find Android project
+        run: |
+          PROJECT_DIR=$(find "$GITHUB_WORKSPACE/extracted" \
+            -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) \
+            -print -quit | xargs -r dirname)
+
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "ERROR: Android project not found"
+            echo "Searching for Gradle files..."
+            find "$GITHUB_WORKSPACE/extracted" -type f \
+              \( -name "build.gradle" -o -name "build.gradle.kts" \)
+            exit 1
+          fi
+
+          echo "Android project found at:"
+          echo "$PROJECT_DIR"
+
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
@@ -38,25 +70,32 @@ jobs:
 
       - name: Install Gradle 8.9
         run: |
-          curl -L https://services.gradle.org/distributions/gradle-8.9-bin.zip -o /tmp/gradle.zip
+          curl -L \
+            https://services.gradle.org/distributions/gradle-8.9-bin.zip \
+            -o /tmp/gradle.zip
+
           unzip -q /tmp/gradle.zip -d /tmp
+
           echo "/tmp/gradle-8.9/bin" >> "$GITHUB_PATH"
 
       - name: Generate Gradle Wrapper
         run: |
+          cd "$PROJECT_DIR"
           gradle wrapper --gradle-version 8.9
 
       - name: Make Gradle executable
         run: |
+          cd "$PROJECT_DIR"
           chmod +x gradlew
 
       - name: Build APK
         run: |
+          cd "$PROJECT_DIR"
           ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: MazArchive-debug-apk
-          path: android/app/build/outputs/apk/**/*.apk
+          path: '/build/outputs/apk//*.apk'
           if-no-files-found: error
