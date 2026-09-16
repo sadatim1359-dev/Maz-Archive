@@ -24,16 +24,14 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v4
-
-      - name: Accept Android SDK licenses
-        run: |
-          yes | sdkmanager --licenses > /dev/null || true
+        with:
+          packages: ''
 
       - name: Install Android SDK 35
         run: |
-          sdkmanager --sdk_root="$ANDROID_SDK_ROOT" \
+          sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --install \
             "platform-tools" \
             "platforms;android-35" \
             "build-tools;35.0.0"
@@ -52,13 +50,9 @@ jobs:
         run: |
           chmod +x gradlew
 
-      - name: Build Debug APK
+      - name: Build APK
         run: |
           ./gradlew assembleDebug --no-daemon --stacktrace
-
-      - name: Find APK
-        run: |
-          find app/build/outputs -type f -name "*.apk" -print
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
