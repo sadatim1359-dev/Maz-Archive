@@ -29,4 +29,4 @@ ENV PORT=8080
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "find /app -type f -path '*/bin/*' -executable -exec {} \\;"]
+CMD ["/app/mazarchive-backend/bin/mazarchive-backend"]
