@@ -4,7 +4,7 @@ ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx768m"
 
 WORKDIR /home/gradle/project
 
-COPY . .
+COPY backend/ ./
 
 RUN gradle clean installDist --no-daemon --stacktrace
 
