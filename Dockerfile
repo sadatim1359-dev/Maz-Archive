@@ -1,4 +1,3 @@
-
 FROM gradle:8.10.2-jdk17 AS build
 
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx768m"
@@ -30,5 +29,4 @@ ENV PORT=8080
 
 EXPOSE 8080
 
-CMD ["/app/bin/mazarchiv
-e-backend"]
+CMD ["/app/bin/mazarchive-backend"]
