@@ -5,7 +5,7 @@ WORKDIR /workspace
 COPY . .
 
 RUN set -eux; \
-    ZIP_FILE="$(find /workspace -type f -iname '*Stage9*zip' | head -n 1)"; \
+    ZIP_FILE="$(find /workspace -type f -iname '*Stage10*zip' | head -n 1)"; \
     test -n "$ZIP_FILE"; \
     mkdir -p /workspace/unpacked; \
     cd /workspace/unpacked; \
