@@ -6,7 +6,7 @@ WORKDIR /workspace
 
 COPY . /workspace/repo
 
-RUN ZIP_FILE="$(find /workspace/repo -maxdepth 1 -type f -iname '*Stage4*zip' | head -n 1)" && \
+RUN ZIP_FILE="$(find /workspace/repo -maxdepth 1 -type f -iname '*Stage5*zip' | head -n 1)" && \
     test -n "$ZIP_FILE" && \
     mkdir /workspace/unpacked && \
     cd /workspace/unpacked && \
