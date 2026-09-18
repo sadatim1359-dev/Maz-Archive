@@ -1,3 +1,4 @@
+
 name: Build MazArchive APK
 
 on:
@@ -32,10 +33,21 @@ jobs:
 
           unzip -q "$ZIP_FILE" -d extracted
 
+      - name: Find Android project
+        run: |
+          ANDROID_DIR=$(find extracted -type f -name "settings.gradle.kts" -printf '%h\n' | head -n 1)
+
+          if [ -z "$ANDROID_DIR" ]; then
+            echo "ERROR: Android project not found"
+            find extracted -maxdepth 5 -type f
+            exit 1
+          fi
+
+          echo "Android project found at: $ANDROID_DIR"
+          echo "ANDROID_DIR=$ANDROID_DIR" >> "$GITHUB_ENV"
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
-        with:
-          packages: ''
 
       - name: Install Android SDK 35
         run: |
@@ -52,23 +64,21 @@ jobs:
           echo "/tmp/gradle-8.9/bin" >> "$GITHUB_PATH"
 
       - name: Generate Gradle Wrapper
-        working-directory: extracted/android
         run: |
-          gradle wrapper --gradle-version 8.9
+          gradle -p "$ANDROID_DIR" wrapper --gradle-version 8.9
 
       - name: Make Gradle executable
-        working-directory: extracted/android
         run: |
-          chmod +x gradlew
+          chmod +x "$ANDROID_DIR/gradlew"
 
       - name: Build APK
-        working-directory: extracted/android
         run: |
+          cd "$ANDROID_DIR"
           ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: MazArchive-debug-apk
-          path: extracted/android/app/build/outputs/apk/**/*.apk
+          path: extracted/**/app/build/outputs/apk/**/*.apk
           if-no-files-found: error
